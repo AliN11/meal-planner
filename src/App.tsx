@@ -38,12 +38,17 @@ function App() {
 
   // Migrate existing meals to include category field
   useEffect(() => {
-    const needsMigration = meals.some((meal) => !meal.category);
+    const needsMigration = meals.some(
+      (meal) => !meal.categories && (meal as any).category
+    );
     if (needsMigration) {
-      const migratedMeals = meals.map((meal) => ({
-        ...meal,
-        category: meal.category || ("lunch" as const),
-      }));
+      const migratedMeals = meals.map((meal) => {
+        const oldMeal = meal as any;
+        return {
+          ...meal,
+          categories: oldMeal.category ? [oldMeal.category] : ["lunch"],
+        };
+      });
       setMeals(migratedMeals);
     }
   }, [meals, setMeals]);
@@ -60,7 +65,7 @@ function App() {
       name: formData.name,
       description: formData.description || "",
       difficulty: formData.difficulty,
-      category: formData.category,
+      categories: formData.categories,
       ingredients: formData.ingredients
         ? formData.ingredients
             .split(",")
@@ -92,10 +97,11 @@ function App() {
       );
     }
 
-    // Apply category filter
+    // Apply category filter - check if meal has the selected category
     if (activeCategoryFilter !== "all") {
       filtered = filtered.filter(
-        (meal) => meal.category === activeCategoryFilter
+        (meal) =>
+          meal.categories && meal.categories.includes(activeCategoryFilter)
       );
     }
 
@@ -129,7 +135,11 @@ function App() {
     };
 
     meals.forEach((meal) => {
-      counts[meal.category]++;
+      if (meal.categories) {
+        meal.categories.forEach((category) => {
+          counts[category]++;
+        });
+      }
     });
 
     return counts;
@@ -150,8 +160,8 @@ function App() {
                 <p className="text-sm text-muted-foreground">
                   غذاهای خود را بر اساس سطح دشواری سازماندهی کنید
                   {!isOnline && (
-                    <span className="mr-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                      حالت آفلاین
+                    <span className="mr-2 px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs rounded-full border border-yellow-200 dark:border-yellow-700">
+                      🔒 حالت آفلاین - داده‌ها محلی ذخیره می‌شوند
                     </span>
                   )}
                 </p>
@@ -247,8 +257,9 @@ function App() {
             <p>
               مدیریت غذاها - سازمان‌دهنده شخصی دستور پخت شما
               {!isOnline && (
-                <span className="block mt-1 text-yellow-600">
-                  کار در حالت آفلاین - تمام تغییرات به‌صورت محلی ذخیره می‌شود
+                <span className="block mt-1 text-yellow-600 dark:text-yellow-400">
+                  🔒 در حالت آفلاین - تمام ویژگی‌ها در دسترس هستند و داده‌ها
+                  به‌صورت محلی ذخیره می‌شوند
                 </span>
               )}
             </p>

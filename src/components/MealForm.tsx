@@ -16,21 +16,33 @@ const initialFormData: MealFormData = {
   name: "",
   description: "",
   difficulty: "easy",
-  category: "lunch",
+  categories: ["lunch"],
   ingredients: "",
   cookingTime: "",
   servings: "",
 };
 
+const categoryLabels: Record<MealCategory, string> = {
+  breakfast: "صبحانه",
+  lunch: "ناهار",
+  dinner: "شام",
+  snacks: "میان‌وعده",
+};
+
 export const MealForm: React.FC<MealFormProps> = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState<MealFormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<MealFormData>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof MealFormData, string>>
+  >({});
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<MealFormData> = {};
+    const newErrors: Partial<Record<keyof MealFormData, string>> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = "نام غذا الزامی است";
+    }
+    if (formData.categories.length === 0) {
+      newErrors.categories = "حداقل یک نوع وعده باید انتخاب شود";
     }
     if (
       formData.cookingTime &&
@@ -61,6 +73,21 @@ export const MealForm: React.FC<MealFormProps> = ({ onSubmit, onCancel }) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleCategoryChange = (category: MealCategory, checked: boolean) => {
+    setFormData((prev) => {
+      const newCategories = checked
+        ? [...prev.categories, category]
+        : prev.categories.filter((c) => c !== category);
+
+      return { ...prev, categories: newCategories };
+    });
+
+    // Clear category error if at least one category is selected
+    if (errors.categories && (checked || formData.categories.length > 1)) {
+      setErrors((prev) => ({ ...prev, categories: undefined }));
     }
   };
 
@@ -139,24 +166,37 @@ export const MealForm: React.FC<MealFormProps> = ({ onSubmit, onCancel }) => {
           </div>
 
           <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium mb-1"
-            >
-              نوع وعده غذایی
+            <label className="block text-sm font-medium mb-3">
+              نوع وعده غذایی *
             </label>
-            <Select
-              id="category"
-              value={formData.category}
-              onChange={(e) =>
-                handleInputChange("category", e.target.value as MealCategory)
-              }
-            >
-              <option value="breakfast">صبحانه</option>
-              <option value="lunch">ناهار</option>
-              <option value="dinner">شام</option>
-              <option value="snacks">میان‌وعده</option>
-            </Select>
+            <div className="space-y-2">
+              {(Object.keys(categoryLabels) as MealCategory[]).map(
+                (category) => (
+                  <div key={category} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`category-${category}`}
+                      checked={formData.categories.includes(category)}
+                      onChange={(e) =>
+                        handleCategoryChange(category, e.target.checked)
+                      }
+                      className="w-4 h-4 text-primary border-2 border-input rounded focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    />
+                    <label
+                      htmlFor={`category-${category}`}
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      {categoryLabels[category]}
+                    </label>
+                  </div>
+                )
+              )}
+            </div>
+            {errors.categories && (
+              <p className="text-destructive text-xs mt-1">
+                {errors.categories}
+              </p>
+            )}
           </div>
 
           <div>

@@ -6,7 +6,7 @@ export interface Meal {
   name: string;
   description: string;
   difficulty: MealDifficulty;
-  category: MealCategory;
+  categories: MealCategory[];
   ingredients: string[];
   cookingTime: number; // in minutes (0 if not provided)
   servings: number; // (0 if not provided)
@@ -17,7 +17,7 @@ export interface MealFormData {
   name: string;
   description: string;
   difficulty: MealDifficulty;
-  category: MealCategory;
+  categories: MealCategory[];
   ingredients: string;
   cookingTime: string;
   servings: string;

@@ -103,7 +103,7 @@ export const MealCard: React.FC<MealCardProps> = ({ meal, onDelete }) => {
         )}
 
         <div className="flex items-center justify-between">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <div
               className={`px-2 py-1 rounded-full text-xs font-medium border ${
                 difficultyColors[meal.difficulty]
@@ -111,13 +111,15 @@ export const MealCard: React.FC<MealCardProps> = ({ meal, onDelete }) => {
             >
               {difficultyLabels[meal.difficulty]}
             </div>
-            <div
-              className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                categoryColors[meal.category]
-              }`}
-            >
-              {categoryLabels[meal.category]}
-            </div>
+            {meal.categories &&
+              meal.categories.map((category) => (
+                <div
+                  key={category}
+                  className={`px-2 py-1 rounded-full text-xs font-medium border ${categoryColors[category]}`}
+                >
+                  {categoryLabels[category]}
+                </div>
+              ))}
           </div>
           {renderDifficultyStars(meal.difficulty)}
         </div>
