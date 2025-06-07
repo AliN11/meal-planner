@@ -20,10 +20,33 @@ if ("serviceWorker" in navigator) {
       .register("/sw.js")
       .then((registration) => {
         console.log("SW registered: ", registration);
+
+        // Check for updates
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener("statechange", () => {
+              if (
+                newWorker.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
+                console.log(
+                  "New service worker available, please refresh the page"
+                );
+                // Optionally show a notification to the user
+              }
+            });
+          }
+        });
       })
       .catch((registrationError) => {
         console.log("SW registration failed: ", registrationError);
       });
+  });
+
+  // Listen for service worker messages
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    console.log("Message from service worker:", event.data);
   });
 }
 

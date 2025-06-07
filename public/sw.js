@@ -1,29 +1,11 @@
-const CACHE_NAME = "meal-manager-v2";
-const STATIC_CACHE = "meal-manager-static-v2";
-const DATA_CACHE = "meal-manager-data-v2";
-
-const FILES_TO_CACHE = [
-  "/",
-  "/static/js/bundle.js",
-  "/static/css/main.css",
-  "/manifest.json",
-  "/favicon.ico",
-  "/logo192.png",
-  "/logo512.png",
-];
+const CACHE_NAME = "meal-manager-v3";
+const RUNTIME_CACHE = "meal-manager-runtime-v3";
 
 // Install service worker
 self.addEventListener("install", (event) => {
   console.log("[ServiceWorker] Install");
-  event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then((cache) => {
-        console.log("[ServiceWorker] Pre-caching offline page");
-        return cache.addAll(FILES_TO_CACHE);
-      })
-      .then(() => self.skipWaiting())
-  );
+  // Skip waiting to activate immediately
+  self.skipWaiting();
 });
 
 // Activate service worker
@@ -33,7 +15,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== STATIC_CACHE && cacheName !== DATA_CACHE) {
+          if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
             console.log("[ServiceWorker] Removing old cache", cacheName);
             return caches.delete(cacheName);
           }
@@ -41,43 +23,92 @@ self.addEventListener("activate", (event) => {
       );
     })
   );
-  event.waitUntil(self.clients.claim());
+  // Take control of all clients immediately
+  self.clients.claim();
 });
 
-// Fetch event - network first for API calls, cache first for static assets
+// Fetch event - Cache First strategy with network fallback
 self.addEventListener("fetch", (event) => {
-  if (event.request.url.includes("/api/")) {
-    // Network first strategy for API calls
-    event.respondWith(
-      caches.open(DATA_CACHE).then((cache) => {
+  // Skip non-GET requests
+  if (event.request.method !== "GET") {
+    return;
+  }
+
+  // Skip chrome extension and other non-http requests
+  if (!event.request.url.startsWith("http")) {
+    return;
+  }
+
+  event.respondWith(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          console.log("[ServiceWorker] Serving from cache:", event.request.url);
+          return cachedResponse;
+        }
+
+        console.log(
+          "[ServiceWorker] Fetching from network:",
+          event.request.url
+        );
         return fetch(event.request)
           .then((response) => {
-            if (response.status === 200) {
-              cache.put(event.request.url, response.clone());
+            // Don't cache non-successful responses
+            if (
+              !response ||
+              response.status !== 200 ||
+              response.type !== "basic"
+            ) {
+              return response;
             }
+
+            // Clone the response before caching
+            const responseToCache = response.clone();
+            cache.put(event.request, responseToCache);
+            console.log("[ServiceWorker] Cached:", event.request.url);
+
             return response;
           })
-          .catch(() => {
-            return cache.match(event.request);
+          .catch((error) => {
+            console.log("[ServiceWorker] Fetch failed:", error);
+
+            // For navigation requests, return the cached root page
+            if (event.request.mode === "navigate") {
+              return cache.match("/").then((cachedResponse) => {
+                if (cachedResponse) {
+                  return cachedResponse;
+                }
+                // Fallback HTML for offline
+                return new Response(
+                  `<!DOCTYPE html>
+                   <html lang="fa" dir="rtl">
+                   <head>
+                     <meta charset="utf-8">
+                     <meta name="viewport" content="width=device-width, initial-scale=1">
+                     <title>مدیریت غذاها - آفلاین</title>
+                     <style>
+                       body { font-family: Arial, sans-serif; text-align: center; padding: 50px; direction: rtl; }
+                       .offline { color: #666; }
+                     </style>
+                   </head>
+                   <body>
+                     <h1>مدیریت غذاها</h1>
+                     <p class="offline">برنامه در حالت آفلاین است. لطفاً اتصال اینترنت خود را بررسی کنید.</p>
+                     <button onclick="window.location.reload()">تلاش مجدد</button>
+                   </body>
+                   </html>`,
+                  {
+                    headers: { "Content-Type": "text/html" },
+                  }
+                );
+              });
+            }
+
+            throw error;
           });
-      })
-    );
-  } else {
-    // Cache first strategy for static assets
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).catch(() => {
-          // Return fallback page for navigation requests
-          if (event.request.mode === "navigate") {
-            return caches.match("/");
-          }
-        });
-      })
-    );
-  }
+      });
+    })
+  );
 });
 
 // Background sync for offline actions (optional)
