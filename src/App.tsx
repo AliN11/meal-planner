@@ -4,6 +4,7 @@ import { Button } from "./components/ui/button";
 import { MealCard } from "./components/MealCard";
 import { MealForm } from "./components/MealForm";
 import { FilterButtons } from "./components/FilterButtons";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { Meal, MealFormData, FilterType } from "./types/meal";
 
@@ -105,10 +106,13 @@ function App() {
                 </p>
               </div>
             </div>
-            <Button onClick={() => setShowForm(true)} disabled={showForm}>
-              <Plus className="h-4 w-4 ml-2" />
-              افزودن غذا
-            </Button>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <Button onClick={() => setShowForm(true)} disabled={showForm}>
+                <Plus className="h-4 w-4 ml-2" />
+                افزودن غذا
+              </Button>
+            </div>
           </div>
         </div>
       </header>

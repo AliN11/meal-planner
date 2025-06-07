@@ -1,7 +1,9 @@
 {
-  "short_name": "Meal Manager",
-  "name": "Meal Manager - Recipe Organizer",
-  "description": "Organize your meals by difficulty level with offline support",
+  "short_name": "مدیریت غذاها",
+  "name": "مدیریت غذاها - سازماندهی وعده‌های غذایی",
+  "description": "برنامه‌ای برای مدیریت و سازماندهی وعده‌های غذایی شما بر اساس سطح دشواری با قابلیت آفلاین",
+  "lang": "fa",
+  "dir": "rtl",
   "icons": [
     {
       "src": "favicon.ico",
@@ -11,17 +13,26 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "theme_color": "#3b82f6",
   "background_color": "#ffffff",
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "categories": ["food", "lifestyle", "productivity"],
+  "screenshots": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 480
+  }
 }
