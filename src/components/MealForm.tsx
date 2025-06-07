@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Select } from "./ui/select";
-import { MealFormData, MealDifficulty } from "../types/meal";
+import { MealFormData, MealDifficulty, MealCategory } from "../types/meal";
 
 interface MealFormProps {
   onSubmit: (meal: MealFormData) => void;
@@ -16,6 +16,7 @@ const initialFormData: MealFormData = {
   name: "",
   description: "",
   difficulty: "easy",
+  category: "lunch",
   ingredients: "",
   cookingTime: "",
   servings: "",
@@ -134,6 +135,27 @@ export const MealForm: React.FC<MealFormProps> = ({ onSubmit, onCancel }) => {
               <option value="easy">آسان</option>
               <option value="medium">متوسط</option>
               <option value="hard">سخت</option>
+            </Select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium mb-1"
+            >
+              نوع وعده غذایی
+            </label>
+            <Select
+              id="category"
+              value={formData.category}
+              onChange={(e) =>
+                handleInputChange("category", e.target.value as MealCategory)
+              }
+            >
+              <option value="breakfast">صبحانه</option>
+              <option value="lunch">ناهار</option>
+              <option value="dinner">شام</option>
+              <option value="snacks">میان‌وعده</option>
             </Select>
           </div>
 

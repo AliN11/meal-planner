@@ -3,15 +3,23 @@ import { Plus, ChefHat } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { MealCard } from "./components/MealCard";
 import { MealForm } from "./components/MealForm";
-import { FilterButtons } from "./components/FilterButtons";
+import { MealFilters } from "./components/MealFilters";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useLocalStorage } from "./hooks/useLocalStorage";
-import { Meal, MealFormData, FilterType } from "./types/meal";
+import {
+  Meal,
+  MealFormData,
+  DifficultyFilterType,
+  CategoryFilterType,
+} from "./types/meal";
 
 function App() {
   const [meals, setMeals] = useLocalStorage<Meal[]>("meals", []);
   const [showForm, setShowForm] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeDifficultyFilter, setActiveDifficultyFilter] =
+    useState<DifficultyFilterType>("all");
+  const [activeCategoryFilter, setActiveCategoryFilter] =
+    useState<CategoryFilterType>("all");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   // Monitor online/offline status
@@ -28,6 +36,18 @@ function App() {
     };
   }, []);
 
+  // Migrate existing meals to include category field
+  useEffect(() => {
+    const needsMigration = meals.some((meal) => !meal.category);
+    if (needsMigration) {
+      const migratedMeals = meals.map((meal) => ({
+        ...meal,
+        category: meal.category || ("lunch" as const),
+      }));
+      setMeals(migratedMeals);
+    }
+  }, [meals, setMeals]);
+
   // Generate unique ID for new meals
   const generateId = () => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -40,6 +60,7 @@ function App() {
       name: formData.name,
       description: formData.description || "",
       difficulty: formData.difficulty,
+      category: formData.category,
       ingredients: formData.ingredients
         ? formData.ingredients
             .split(",")
@@ -60,13 +81,26 @@ function App() {
     setMeals((prevMeals) => prevMeals.filter((meal) => meal.id !== id));
   };
 
-  // Filter meals based on active filter
+  // Filter meals based on active filters
   const filteredMeals = useMemo(() => {
-    if (activeFilter === "all") {
-      return meals;
+    let filtered = meals;
+
+    // Apply difficulty filter
+    if (activeDifficultyFilter !== "all") {
+      filtered = filtered.filter(
+        (meal) => meal.difficulty === activeDifficultyFilter
+      );
     }
-    return meals.filter((meal) => meal.difficulty === activeFilter);
-  }, [meals, activeFilter]);
+
+    // Apply category filter
+    if (activeCategoryFilter !== "all") {
+      filtered = filtered.filter(
+        (meal) => meal.category === activeCategoryFilter
+      );
+    }
+
+    return filtered;
+  }, [meals, activeDifficultyFilter, activeCategoryFilter]);
 
   // Calculate meal counts for filter buttons
   const mealCounts = useMemo(() => {
@@ -79,6 +113,23 @@ function App() {
 
     meals.forEach((meal) => {
       counts[meal.difficulty]++;
+    });
+
+    return counts;
+  }, [meals]);
+
+  // Calculate category counts for filter buttons
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      all: meals.length,
+      breakfast: 0,
+      lunch: 0,
+      dinner: 0,
+      snacks: 0,
+    };
+
+    meals.forEach((meal) => {
+      counts[meal.category]++;
     });
 
     return counts;
@@ -129,10 +180,13 @@ function App() {
         )}
 
         {meals.length > 0 && (
-          <FilterButtons
-            activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
+          <MealFilters
+            activeDifficultyFilter={activeDifficultyFilter}
+            activeCategoryFilter={activeCategoryFilter}
+            onDifficultyFilterChange={setActiveDifficultyFilter}
+            onCategoryFilterChange={setActiveCategoryFilter}
             mealCounts={mealCounts}
+            categoryCounts={categoryCounts}
           />
         )}
 
@@ -162,21 +216,19 @@ function App() {
           <div className="text-center py-12">
             <ChefHat className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-foreground mb-2">
-              هیچ غذای{" "}
-              {activeFilter === "easy"
-                ? "آسان"
-                : activeFilter === "medium"
-                ? "متوسط"
-                : activeFilter === "hard"
-                ? "سخت"
-                : ""}{" "}
-              یافت نشد
+              هیچ غذایی با فیلترهای انتخابی یافت نشد
             </h2>
             <p className="text-muted-foreground mb-6">
-              فیلتر دشواری متفاوتی انتخاب کنید یا غذاهای بیشتری اضافه کنید.
+              فیلترهای متفاوتی انتخاب کنید یا غذاهای بیشتری اضافه کنید.
             </p>
             <div className="flex gap-3 justify-center">
-              <Button onClick={() => setActiveFilter("all")} variant="outline">
+              <Button
+                onClick={() => {
+                  setActiveDifficultyFilter("all");
+                  setActiveCategoryFilter("all");
+                }}
+                variant="outline"
+              >
                 نمایش همه غذاها
               </Button>
               <Button onClick={() => setShowForm(true)}>

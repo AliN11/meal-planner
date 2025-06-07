@@ -1,10 +1,12 @@
 export type MealDifficulty = "easy" | "medium" | "hard";
+export type MealCategory = "breakfast" | "lunch" | "dinner" | "snacks";
 
 export interface Meal {
   id: string;
   name: string;
   description: string;
   difficulty: MealDifficulty;
+  category: MealCategory;
   ingredients: string[];
   cookingTime: number; // in minutes (0 if not provided)
   servings: number; // (0 if not provided)
@@ -15,9 +17,11 @@ export interface MealFormData {
   name: string;
   description: string;
   difficulty: MealDifficulty;
+  category: MealCategory;
   ingredients: string;
   cookingTime: string;
   servings: string;
 }
 
-export type FilterType = "all" | MealDifficulty;
+export type DifficultyFilterType = "all" | MealDifficulty;
+export type CategoryFilterType = "all" | MealCategory;

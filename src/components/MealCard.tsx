@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Button } from "./ui/button";
-import { Meal, MealDifficulty } from "../types/meal";
+import { Meal, MealDifficulty, MealCategory } from "../types/meal";
 
 interface MealCardProps {
   meal: Meal;
@@ -31,6 +31,20 @@ const difficultyIcons: Record<MealDifficulty, number> = {
   easy: 1,
   medium: 2,
   hard: 3,
+};
+
+const categoryColors: Record<MealCategory, string> = {
+  breakfast: "bg-orange-100 text-orange-800 border-orange-200",
+  lunch: "bg-blue-100 text-blue-800 border-blue-200",
+  dinner: "bg-purple-100 text-purple-800 border-purple-200",
+  snacks: "bg-pink-100 text-pink-800 border-pink-200",
+};
+
+const categoryLabels: Record<MealCategory, string> = {
+  breakfast: "صبحانه",
+  lunch: "ناهار",
+  dinner: "شام",
+  snacks: "میان‌وعده",
 };
 
 export const MealCard: React.FC<MealCardProps> = ({ meal, onDelete }) => {
@@ -89,12 +103,21 @@ export const MealCard: React.FC<MealCardProps> = ({ meal, onDelete }) => {
         )}
 
         <div className="flex items-center justify-between">
-          <div
-            className={`px-2 py-1 rounded-full text-xs font-medium border ${
-              difficultyColors[meal.difficulty]
-            }`}
-          >
-            {difficultyLabels[meal.difficulty]}
+          <div className="flex gap-2">
+            <div
+              className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                difficultyColors[meal.difficulty]
+              }`}
+            >
+              {difficultyLabels[meal.difficulty]}
+            </div>
+            <div
+              className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                categoryColors[meal.category]
+              }`}
+            >
+              {categoryLabels[meal.category]}
+            </div>
           </div>
           {renderDifficultyStars(meal.difficulty)}
         </div>
